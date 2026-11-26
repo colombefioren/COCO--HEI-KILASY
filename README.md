@@ -1,6 +1,6 @@
 # Kilasy
 
-Kilasy is a programming exercise platform. Teachers publish exercises with a deadline, students submit their code or a link to their GitHub repository, and teachers then grade them. Students receive their grade by email.
+Kilasy is a programming exercise platform. Teachers publish exercises with a deadline, students submit their code or a link to their GitHub repository, and teachers then grade them. Students receive their grade by email and by SMS (the SMS provider is simulated: messages are written in the logs).
 
 Production version: 1.3.0.
 

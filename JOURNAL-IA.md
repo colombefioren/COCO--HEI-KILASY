@@ -151,3 +151,92 @@ Le diff du README contient une seule ligne ajoutée (assistant).
 - `README.md` : règle de pénalité
 
 **Effet visible** : certaines notes de l’export changent d’un dixième (13,7 devient 13,8), car l’arrondi est commun.
+
+## Changement C2 : notification par SMS
+
+### Échange 8 · 20:39 — Où placer le code SMS
+
+**Demande**  
+Réaliser C2 en me demandant mon avis sur les choix.
+
+**Proposition**
+
+- Deux petits fichiers : une interface et une simulation.
+- Ou tout placer dans `KilasyApplication.java`.
+
+**Décision**  
+Deux nouveaux fichiers.
+
+**Pourquoi**  
+La notation ne dépend que de l’interface : changer de fournisseur ne la modifie pas.
+
+**Vérification**  
+`SubmissionController` ne mentionne pas la classe de simulation (assistant).
+
+### Échange 9 · 20:40 — Échec du SMS
+
+**Demande**  
+Que voit l’enseignant si le SMS échoue ?
+
+**Proposition**
+
+- La même réponse qu’avant, avec l’échec écrit dans les logs.
+- Ou un champ `smsSent`.
+
+**Décision**  
+Même réponse qu’avant.
+
+**Pourquoi**  
+Le client n’a pas demandé de changer la réponse de l’API.
+
+**Vérification**  
+Panne simulée par une exception : réponse 200, note enregistrée, échec dans les logs (assistant).
+
+### Échange 10 · 20:44 — Email et README
+
+**Demande**  
+Relire les limites du changement.
+
+**Proposition**
+
+- Le SMS part après l’email ; si l’email échoue, le SMS ne part pas.
+- Mentionner le SMS dans le README.
+
+**Décision**  
+Email inchangé, README complété.
+
+**Pourquoi**  
+C2 ne demande pas de modifier l’email, et le README doit rester exact.
+
+**Vérification**  
+Envoi normal : email puis ligne `[SMS]` dans les logs (assistant).
+
+### Échange 11 · 20:48 — Revue de sécurité
+
+**Demande**  
+Faut-il traiter la remarque de la revue de sécurité ?
+
+**Proposition**
+
+- La simulation écrit le numéro et la note dans les logs.
+- Le noter sans changer le code.
+
+**Décision**  
+Noté, code inchangé.
+
+**Pourquoi**  
+Le client demande ce message et les numéros sont fictifs. La simulation ne doit pas aller en production telle quelle.
+
+**Vérification**  
+La ligne des logs suit le format de la consigne (assistant).
+
+## Bilan C2
+
+**Code écrit par l’assistant**
+
+- `SmsSender.java` (nouveau) : interface d’envoi
+- `LogSmsSender.java` (nouveau) : simulation dans les logs
+- `SubmissionController.java` : envoi après l’email, dans un `try/catch`
+- `README.md` : mention du SMS
+
+**Limite** : l’envoi est synchrone, un fournisseur lent ralentirait la notation.
