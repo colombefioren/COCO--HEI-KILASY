@@ -1,6 +1,7 @@
 package hei.school;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -99,7 +100,8 @@ public class SubmissionController {
             double raw = ((BigDecimal) row.get("raw_points")).doubleValue();
             double max = ((BigDecimal) row.get("max_points")).doubleValue();
             result.put("rawPoints", raw);
-            result.put("grade", Math.round(raw / max * 20 * 10) / 10.0);
+            result.put("grade", GradeReport.gradeOutOf20((BigDecimal) row.get("raw_points"),
+                    (BigDecimal) row.get("max_points"), deadline, submittedAt).doubleValue());
             result.put("feedback", row.get("feedback"));
         }
         return ResponseEntity.ok(result);
@@ -127,15 +129,17 @@ public class SubmissionController {
             return ResponseEntity.badRequest().body(Map.of("error", "Les points doivent être entre 0 et " + max));
         }
 
+        // same precision as the raw_points column, so the grade matches the transcript and the export
+        BigDecimal storedPoints = BigDecimal.valueOf(points).setScale(2, RoundingMode.HALF_UP);
         jdbcTemplate.update("UPDATE submission SET raw_points = ?, feedback = ?, graded_at = now() WHERE id = ?",
-                points, feedback, id);
-
-        // grade out of 20
-        double grade = Math.round(points / max * 20 * 10) / 10.0;
+                storedPoints, feedback, id);
 
         LocalDate deadline = ((java.sql.Date) row.get("deadline")).toLocalDate();
         LocalDateTime submittedAt = ((Timestamp) row.get("submitted_at")).toLocalDateTime();
         boolean late = submittedAt.toLocalDate().isAfter(deadline);
+        // grade out of 20, late penalty included
+        double grade = GradeReport.gradeOutOf20(storedPoints, (BigDecimal) row.get("max_points"), deadline, submittedAt)
+                .doubleValue();
 
         // notify the student by email
         String fullName = (String) row.get("full_name");

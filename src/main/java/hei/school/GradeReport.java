@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +24,18 @@ public class GradeReport {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    /**
+     * Grade out of 20, with the late penalty: -10% per started day after the deadline day, capped at -50%.
+     * Used by the grading endpoint, the transcript and the CSV export so that they all show the same grade.
+     */
+    static BigDecimal gradeOutOf20(BigDecimal rawPoints, BigDecimal maxPoints, LocalDate deadline,
+            LocalDateTime submittedAt) {
+        long daysLate = Math.max(0, ChronoUnit.DAYS.between(deadline, submittedAt.toLocalDate()));
+        long penaltyPercent = Math.min(daysLate * 10, 50);
+        return rawPoints.multiply(BigDecimal.valueOf(20 * (100 - penaltyPercent)))
+                .divide(maxPoints.multiply(BigDecimal.valueOf(100)), 1, RoundingMode.HALF_UP);
+    }
 
     public Map<String, Object> build(long studentId) {
         List<Map<String, Object>> students = jdbcTemplate.queryForList("SELECT * FROM student WHERE id = ?", studentId);
@@ -63,7 +76,7 @@ public class GradeReport {
                 } else {
                     BigDecimal raw = (BigDecimal) row.get("raw_points");
                     BigDecimal max = (BigDecimal) row.get("max_points");
-                    BigDecimal grade = raw.multiply(new BigDecimal("20")).divide(max, 1, RoundingMode.HALF_UP);
+                    BigDecimal grade = gradeOutOf20(raw, max, deadline, submittedAt);
                     line.put("status", "CORRIGÉ");
                     line.put("grade", grade);
                     line.put("feedback", row.get("feedback"));

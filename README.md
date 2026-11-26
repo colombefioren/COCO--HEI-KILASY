@@ -83,3 +83,4 @@ curl http://localhost:8080/exports/grades.csv
 - A student can only submit once per exercise.
 - A submission sent after the deadline day is marked as late.
 - Points are entered on the exercise's scale (10, 20, 40…) and converted to a grade out of 20.
+- A late submission loses 10% of its grade per started day after the deadline day, up to 50%. The grade out of 20 is rounded half up to one decimal.
