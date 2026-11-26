@@ -23,8 +23,19 @@ CREATE TABLE IF NOT EXISTS exercise
     title       VARCHAR(200) NOT NULL,
     description TEXT,
     max_points  NUMERIC(5, 2) NOT NULL DEFAULT 20,
-    deadline    DATE         NOT NULL,
-    created_at  TIMESTAMP    NOT NULL DEFAULT now()
+    deadline    DATE,
+    duration_minutes INTEGER CHECK (duration_minutes > 0),
+    created_at  TIMESTAMP    NOT NULL DEFAULT now(),
+    CHECK (deadline IS NOT NULL OR duration_minutes IS NOT NULL)
+);
+
+-- When a student opened a timed exercise
+CREATE TABLE IF NOT EXISTS exercise_start
+(
+    exercise_id BIGINT    NOT NULL REFERENCES exercise (id),
+    student_id  BIGINT    NOT NULL REFERENCES student (id),
+    started_at  TIMESTAMP NOT NULL,
+    PRIMARY KEY (exercise_id, student_id)
 );
 
 CREATE TABLE IF NOT EXISTS submission

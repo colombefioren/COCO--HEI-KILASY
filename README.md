@@ -26,7 +26,7 @@ The API responds on http://localhost:8080.
 - PostgreSQL on port 5432;
 - Mailpit, a fake mail server: emails sent by Kilasy are displayed at http://localhost:8025.
 
-**The SQL scripts are idempotent**: at every startup the schema and the demo data are created only if missing, and existing data is kept. To start from scratch, run `docker compose down` (PostgreSQL has no persistent volume, so removing the container wipes the data). The demo data is: 2 teachers, 6 students, 5 exercises and 12 submissions.
+**The SQL scripts are idempotent**: at every startup the schema and the demo data are created only if missing, and existing data is kept. The scripts do not alter existing tables: after a schema change, recreate the database. To start from scratch, run `docker compose down` (PostgreSQL has no persistent volume, so removing the container wipes the data). The demo data is: 2 teachers, 6 students, 5 exercises and 12 submissions.
 
 ## API
 
@@ -35,6 +35,7 @@ The API responds on http://localhost:8080.
 | GET | `/exercises` | List exercises |
 | GET | `/exercises/{id}` | Exercise details |
 | POST | `/exercises` | Create an exercise (teacher) |
+| POST | `/exercises/{id}/start` | Start the countdown on a timed exercise (student) |
 | POST | `/exercises/{id}/submissions` | Submit an exercise (student) |
 | GET | `/submissions/{id}` | Submission details |
 | PUT | `/submissions/{id}/grade` | Grade a submission (teacher) |
@@ -52,6 +53,18 @@ Create an exercise:
 curl -X POST http://localhost:8080/exercises \
   -H "Content-Type: application/json" \
   -d '{"title": "Recherche dichotomique", "maxPoints": 20, "deadline": "2027-03-01", "teacherId": 1}'
+```
+
+Create a timed exercise (`deadline` is optional when `durationMinutes` is given), then open it as a student:
+
+```bash
+curl -X POST http://localhost:8080/exercises \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Contrôle SQL", "maxPoints": 20, "durationMinutes": 30, "teacherId": 2}'
+
+curl -X POST http://localhost:8080/exercises/6/start \
+  -H "Content-Type: application/json" \
+  -d '{"studentId": 2}'
 ```
 
 Submit an exercise:
@@ -81,6 +94,8 @@ curl http://localhost:8080/exports/grades.csv
 
 - A submission contains code, a link to a GitHub repository, or both.
 - A student can only submit once per exercise.
+- An exercise has a deadline, a duration in minutes, or both.
+- On a timed exercise, the countdown starts when the student first calls `start`. A submission sent without starting, or after the duration, is refused (HTTP 422). The transcript shows the time used in minutes, rounded up. The description of a timed exercise is hidden from the list and detail endpoints: `start` returns it.
 - A submission sent after the deadline day is marked as late.
 - Points are entered on the exercise's scale (10, 20, 40…) and converted to a grade out of 20.
 - A late submission loses 10% of its grade per started day after the deadline day, up to 50%. The grade out of 20 is rounded half up to one decimal.

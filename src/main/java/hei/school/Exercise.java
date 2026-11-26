@@ -2,6 +2,8 @@ package hei.school;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 public class Exercise {
 
     private Long id;
@@ -10,6 +12,7 @@ public class Exercise {
     private String description;
     private double maxPoints;
     private LocalDate deadline;
+    private Integer durationMinutes;
 
     public Long getId() {
         return id;
@@ -57,5 +60,15 @@ public class Exercise {
 
     public void setDeadline(LocalDate deadline) {
         this.deadline = deadline;
+    }
+
+    // absent from the JSON for exercises that are not timed
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public Integer getDurationMinutes() {
+        return durationMinutes;
+    }
+
+    public void setDurationMinutes(Integer durationMinutes) {
+        this.durationMinutes = durationMinutes;
     }
 }

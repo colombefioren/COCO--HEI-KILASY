@@ -240,3 +240,107 @@ La ligne des logs suit le format de la consigne (assistant).
 - `README.md` : mention du SMS
 
 **Limite** : l’envoi est synchrone, un fournisseur lent ralentirait la notation.
+
+## Changement C3 : exercices minutés
+
+### Échange 12 · 20:50 — Deuxième appel à `start`
+
+**Demande**  
+Réaliser C3 en me demandant mon avis sur les choix.
+
+**Proposition**
+
+- Garder le premier départ.
+- Ou répondre 409.
+
+**Décision**  
+Garder le premier départ.
+
+**Pourquoi**  
+Le décompte ne doit pas pouvoir être remis à zéro.
+
+**Vérification**  
+Deux appels à `start` donnent la même heure de départ (assistant).
+
+### Échange 13 · 20:50 — Soumission sans `start`
+
+**Demande**  
+Que faire d’une soumission sans appel à `start` ?
+
+**Proposition**
+
+- La refuser avec un 422.
+- Ou l’accepter.
+
+**Décision**  
+La refuser, avec un message qui indique d’ouvrir l’exercice.
+
+**Pourquoi**  
+Sinon la limite de temps se contourne facilement.
+
+**Vérification**  
+Réponse 422 avec le message attendu (assistant).
+
+### Échange 14 · 20:50 — Temps utilisé et README
+
+**Demande**  
+Sous quelle forme afficher le temps utilisé ?
+
+**Proposition**
+
+- Minutes entières arrondies au supérieur.
+- Ou minutes et secondes.
+- Documenter le changement dans le README.
+
+**Décision**  
+Minutes entières (`timeUsedMinutes`), README complété.
+
+**Pourquoi**  
+C’est la même unité que la durée fixée par l’enseignant.
+
+**Vérification**  
+Un départ reculé de 12 minutes donne 13 dans le relevé (assistant).
+
+### Échange 15 · 20:55 — Énoncé visible avant `start`
+
+**Demande**  
+Une revue de sécurité signale que la description d’un exercice minuté est visible avant `start`.
+
+**Proposition**
+
+- La masquer dans la liste et le détail, et la renvoyer avec `start`.
+- Ou seulement noter la limite.
+
+**Décision**  
+Corriger et noter.
+
+**Pourquoi**  
+Un étudiant pouvait lire l’énoncé et se préparer avant le décompte.
+
+**Vérification**  
+Description absente avant `start`, renvoyée par `start` (assistant).
+
+## Bilan C3
+
+**Code écrit par l’assistant**
+
+- `schema.sql` : durée, échéance facultative, table `exercise_start`
+- `Exercise.java`, `ExerciseController.java` : durée et point d’entrée `start`
+- `SubmissionController.java` : refus 422
+- `GradeReport.java`, `CsvExport.java` : échéance absente et temps utilisé
+- `README.md` : nouvelles règles
+
+**Vérification des critères** (assistant, base de test temporaire)
+
+- Durée en plus ou à la place de l’échéance : OK
+- Soumission après la durée refusée (422) : OK
+- Exercices sans durée inchangés : OK
+- Pénalité de C1 sur un exercice minuté avec échéance (16 devient 14,4) : OK
+- Temps utilisé dans le relevé : OK
+
+**Limites**
+
+- Sans authentification, n’importe qui peut appeler `start` pour un autre étudiant, et l’enseignant ne relit plus la description par l’API.
+- Les scripts SQL ne modifient pas une table existante : il faut recréer la base.
+
+**Constat** : une seule nouvelle règle a obligé à modifier presque tous les fichiers.
